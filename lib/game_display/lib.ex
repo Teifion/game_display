@@ -11,4 +11,7 @@ defmodule GameDisplay.Lib do
   
   def deg2rad(d), do: d * (@pi/180)
   def rad2deg(r), do: r * (180/@pi)
+  
+  def round(0, p), do: 0
+  def round(v, p), do: Float.round(v, p)
 end

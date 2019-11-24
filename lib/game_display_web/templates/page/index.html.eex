@@ -1,5 +1,15 @@
+<script type="text/javascript">
+  function show_entity(entity_id) {
+    $('.log').hide();
+    $('.log[data-entity=' + entity_id + ']').show();
+    $('.t-tick').show();
+  }
+</script>
+
+
 <%= for {e, entity} <- @data["entities"] do %>
-  <span class="button" onclick="">
+  <span class="button" onclick="show_entity('<%= e %>')" title="
+  <%= String.slice(e, 0, 12) %>">
     <%= entity["name"] %>  
   </span>
 <% end %>
@@ -11,6 +21,11 @@
   msg = log["msg"]
   
   entities = Regex.scan(~r/[a-zA-Z0-9_\-]{64}/, msg)
+
+  main_entity = case entities do
+    [] -> ""
+    [[e] | _] -> e
+  end
   
   msg = entities
   |> Enum.reduce(msg, fn ([e], acc) ->
@@ -18,9 +33,10 @@
     String.replace(acc, e, "<span class='ship'>#{entity["name"]}</span>")
   end)
 
-  msg = Regex.replace(~r/r{([0-9\., \-]+)}/, msg, fn _, radians ->
-    s = Regex.replace(~r/-?[0-9\.]+/, radians, fn r ->
-      dec_parse(r)
+  msg = Regex.replace(~r/r{([0-9\., e\-]+)}/, msg, fn _, radians ->
+    s = Regex.replace(~r/-?[0-9\.e-]+/, radians, fn r ->
+      r
+      |> dec_parse
       |> Decimal.to_float
       |> rad2deg
       |> round
@@ -28,13 +44,16 @@
     end)
     "{#{s}}"
   end)
-
+  
   # msg = Regex.replace(~r/[0-9\.]+\b/, msg, "<span class='radian'>\\0</span>")
 %>
 
 
 <div class='log <%= log["tags"] |> Enum.map(fn t -> "t-" <> t end) |> Enum.join(" ") %>'
-  data-tags='<%= log["tags"] |> Enum.join(" ")
-%>'><%= raw msg %></div>
+  data-tags='<%= log["tags"] |> Enum.join(" ") %>'
+  data-entity='<%= main_entity %>'
+>
+<%= raw msg %>
+</div>
 
 <% end %>
