@@ -1,35 +1,40 @@
-<section class="phx-hero">
-  <h1><%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1>
-  <p>A productive web framework that<br/>does not compromise speed or maintainability.</p>
-</section>
+<%= for {e, entity} <- @data["entities"] do %>
+  <span class="button" onclick="">
+    <%= entity["name"] %>  
+  </span>
+<% end %>
 
-<section class="row">
-  <article class="column">
-    <h2>Resources</h2>
-    <ul>
-      <li>
-        <a href="https://hexdocs.pm/phoenix/overview.html">Guides &amp; Docs</a>
-      </li>
-      <li>
-        <a href="https://github.com/phoenixframework/phoenix">Source</a>
-      </li>
-      <li>
-        <a href="https://github.com/phoenixframework/phoenix/blob/v1.4/CHANGELOG.md">v1.4 Changelog</a>
-      </li>
-    </ul>
-  </article>
-  <article class="column">
-    <h2>Help</h2>
-    <ul>
-      <li>
-        <a href="https://elixirforum.com/c/phoenix-forum">Forum</a>
-      </li>
-      <li>
-        <a href="https://webchat.freenode.net/?channels=elixir-lang">#elixir-lang on Freenode IRC</a>
-      </li>
-      <li>
-        <a href="https://twitter.com/elixirphoenix">Twitter @elixirphoenix</a>
-      </li>
-    </ul>
-  </article>
-</section>
+
+
+<%= for log <- @data["logs"] do %>
+<%
+  msg = log["msg"]
+  
+  entities = Regex.scan(~r/[a-zA-Z0-9_\-]{64}/, msg)
+  
+  msg = entities
+  |> Enum.reduce(msg, fn ([e], acc) ->
+    entity = @data["entities"][e]
+    String.replace(acc, e, "<span class='ship'>#{entity["name"]}</span>")
+  end)
+
+  msg = Regex.replace(~r/r{([0-9\., \-]+)}/, msg, fn _, radians ->
+    s = Regex.replace(~r/-?[0-9\.]+/, radians, fn r ->
+      dec_parse(r)
+      |> Decimal.to_float
+      |> rad2deg
+      |> round
+      |> to_string
+    end)
+    "{#{s}}"
+  end)
+
+  # msg = Regex.replace(~r/[0-9\.]+\b/, msg, "<span class='radian'>\\0</span>")
+%>
+
+
+<div class='log <%= log["tags"] |> Enum.map(fn t -> "t-" <> t end) |> Enum.join(" ") %>'
+  data-tags='<%= log["tags"] |> Enum.join(" ")
+%>'><%= raw msg %></div>
+
+<% end %>

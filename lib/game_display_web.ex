@@ -38,6 +38,8 @@ defmodule GameDisplayWeb do
 
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
+      
+      import GameDisplay.Lib
 
       import GameDisplayWeb.ErrorHelpers
       import GameDisplayWeb.Gettext
